@@ -15,19 +15,6 @@ I personally recommend using a docker-compose file with the necessary image.
 ```docker-compose
 version: "3"
 services:
-  # myapp:
-  #   build: .
-  #   ports:
-  #     - "5000:80"
-  #   environment:
-  #     - ConnectionStrings:SurrealDB=Server=surrealdb:27017
-  #     - ASPNETCORE_ENVIRONMENT=Production
-  #   volumes:
-  #     - myapp_data:/app/data/
-  #   networks:
-  #     - common-net
-  #   links:
-  #     - surrealdb
   surrealdb:
     image: surrealdb/surrealdb:latest
     volumes:
@@ -45,22 +32,13 @@ networks:
   common-net: {}
 ```
 
-Once done you have to create a connection string in the appsettings.json file to
-tell the library where our database living: 
-
-```json
-  "ConnectionStrings": {
-    "SurrealDb": "http://localhost:8000/sql"
-  }
-```
-
 Of course you can replace the localhost:8000 with whatever your connection
 string is. 
 
 Now add this line of code in Program.cs
 
 ```csharp	
-app.MapSurreal();
+app.MapSurreal("http://localhost:8000/sql");
 ```
 
 Once done you are all set to start building entities.
