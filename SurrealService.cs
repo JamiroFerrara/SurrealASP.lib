@@ -122,19 +122,12 @@ public static class SurrealService
 
     public static async Task<T[]?> ExecQuery<T>(string query, string url)
     {
-        try
-        {
-            var res = await ExecQuery(query, url);
-            var jsonArray = JArray.Parse(res?.Content!);
-            var parsedObj = (JObject)jsonArray[0];
-            var parsedRes = (JArray)parsedObj["result"]!;
+        var res = await ExecQuery(query, url);
+        var jsonArray = JArray.Parse(res?.Content!);
+        var parsedObj = (JObject)jsonArray[0];
+        var parsedRes = (JArray)parsedObj["result"]!;
 
-            return JsonConvert.DeserializeObject<T[]>(parsedRes.ToString());
-        }
-        catch
-        {
-            return default(T[]);
-        }
+        return JsonConvert.DeserializeObject<T[]>(parsedRes.ToString());
     }
 
     public static async Task<RestResponse?> ExecQuery(string query, string url)
