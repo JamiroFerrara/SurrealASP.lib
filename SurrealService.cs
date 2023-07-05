@@ -14,23 +14,20 @@ public static class SurrealService
         var type = item?.GetType();
         var props = type?.GetProperties();
 
-        var sql = $"CREATE {type?.Name} SET ";
-        foreach (var prop in props!)
-            sql += $"{prop.Name} = '{prop.GetValue(item)}', ";
-        sql = sql.Remove(sql.Length - 2);
+        var sql = $"CREATE {type?.Name} CONTENT ";
+        var json = JsonConvert.SerializeObject(item);
+        sql = sql + json;
         sql += ";";
 
         var res = await SurrealService.ExecQuery<T>(sql, url);
         return res![0];
     }
 
-    public static async Task<T?> Update<T>(Dictionary<string, string> props, string id, string url)
+    public static async Task<T?> Update<T>(T item, string id, string url)
     {
-        var sql = $"UPDATE {typeof(T).Name} SET ";
-        foreach (var prop in props)
-            sql += $"{prop.Key} = '{prop.Value}', ";
-
-        sql = sql.Remove(sql.Length - 2);
+        var sql = $"UPDATE {typeof(T).Name} CONTENT ";
+        var json = JsonConvert.SerializeObject(item);
+        sql = sql + json;
         sql += $" WHERE id = '{id}' ";
         sql = sql.Remove(sql.Length - 1);
         sql += ";";

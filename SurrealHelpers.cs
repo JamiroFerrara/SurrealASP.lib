@@ -30,7 +30,7 @@ public static class SurrealHelpers
     public static void MapRoutes<T>(WebApplication app, string url)
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
-        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] Dictionary<string, string> props, string id) => SurrealService.Update<T>(props, id, url));
+        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
         app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAll<T>(url)); ;
         app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.Select<T>(id, url)); ;
         app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)); ;
@@ -53,7 +53,7 @@ public static class SurrealHelpers
 
             return await SurrealService.Relate<T2>(item1Id, item2Id, relation, items, url);
         });
-        app.MapPost($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}", ([FromBody] Dictionary<string, string> props, string id) => SurrealService.Update<T2>(props, id, url));
+        app.MapPost($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}", ([FromBody] T2 item, string id) => SurrealService.Update<T2>(item, id, url));
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/GetAll", () => SurrealService.SelectAll<T2>(url)); ;
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/Get" + "{id}", (string id) => SurrealService.Select<T2>(id, url)); ;
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/DeleteAll", () => SurrealService.DeleteAll<T2>(url)); ;
