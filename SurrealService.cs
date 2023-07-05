@@ -43,6 +43,15 @@ public static class SurrealService
         return res![0];
     }
 
+    public static async Task<T> SelectS3<T>(string id, string url)
+    {
+        //TODO: GetPresignedUrl From Bucket
+        //TODO: T has to extend a type that contains url
+        var sql = $"SELECT * FROM {typeof(T).Name} WHERE id = '{id}'";
+        var res = await ExecQuery<T>(sql, url);
+        return res![0];
+    }
+
     public static async Task<string?> SelectRelation(string relation, string id, string url)
     {
         var sql = $"SELECT * FROM {relation} WHERE id = '{id}'";
@@ -52,6 +61,18 @@ public static class SurrealService
 
     public static async Task<T[]?> SelectAll<T>(string url)
     {
+        Console.WriteLine($"Url: {url}");
+        Console.WriteLine($"Url: {typeof(T)}");
+        var sql = $"SELECT * FROM {typeof(T).Name}";
+        Console.WriteLine($"{sql}");
+        var res = await ExecQuery<T>(sql, url);
+        return res;
+    }
+
+    public static async Task<T[]?> SelectAllS3<T>(string url)
+    {
+        //TODO: GetPresignedUrl From Bucket
+        //TODO: T has to extend a type that contains url
         Console.WriteLine($"Url: {url}");
         Console.WriteLine($"Url: {typeof(T)}");
         var sql = $"SELECT * FROM {typeof(T).Name}";

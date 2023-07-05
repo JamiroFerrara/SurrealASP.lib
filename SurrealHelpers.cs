@@ -44,6 +44,23 @@ public static class SurrealHelpers
         Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
     }
 
+    public static void MapS3Routes<T>(WebApplication app, string url)
+    {
+        app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
+        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
+        app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAllS3<T>(url)); ;
+        app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.SelectS3<T>(id, url)); ;
+        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)); ;
+        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)); ;
+
+        Console.WriteLine($"{typeof(T)}/Create");
+        Console.WriteLine($"{typeof(T)}/Update/" + "{id}");
+        Console.WriteLine($"{typeof(T)}/GetAll");
+        Console.WriteLine($"{typeof(T)}/Get" + "{id}");
+        Console.WriteLine($"{typeof(T)}/DeleteAll");
+        Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
+    }
+
     public static void MapRelations<T1, T2, T3>(WebApplication app, string url)
     {
         app.MapPost("{item1Id}" + $"/{typeof(T2)}/" + "{item2Id}", async (string item1Id, string item2Id, string relation, [FromBody] Dictionary<string, string> items) =>
@@ -100,6 +117,24 @@ public static class SurrealHelpers
             if (type != typeof(SurrealTable))
             {
                 var mapRoutesMethod = typeof(SurrealHelpers).GetMethod(nameof(MapRoutes), BindingFlags.Public | BindingFlags.Static);
+                var genericMapRoutesMethod = mapRoutesMethod?.MakeGenericMethod(type);
+                genericMapRoutesMethod?.Invoke(null, new object[] { app, url });
+                count += 6;
+            }
+        }
+        return count;
+    }
+
+    public static int MapSurrealS3CRUD(this WebApplication app, string url)
+    {
+        var count = 0;
+        var baseType = typeof(SurrealS3);
+        var namespaceTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => baseType.IsAssignableFrom(t));
+        foreach (var type in namespaceTypes)
+        {
+            if (type != typeof(SurrealS3))
+            {
+                var mapRoutesMethod = typeof(SurrealHelpers).GetMethod(nameof(MapS3Routes), BindingFlags.Public | BindingFlags.Static);
                 var genericMapRoutesMethod = mapRoutesMethod?.MakeGenericMethod(type);
                 genericMapRoutesMethod?.Invoke(null, new object[] { app, url });
                 count += 6;
