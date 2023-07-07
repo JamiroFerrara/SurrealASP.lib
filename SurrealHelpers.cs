@@ -44,7 +44,7 @@ public static class SurrealHelpers
         Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
     }
 
-    public static void MapS3Routes<T>(WebApplication app, string url)
+    public static void MapS3Routes<T>(WebApplication app, string url) where T : S3
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
