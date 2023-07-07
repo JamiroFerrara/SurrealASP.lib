@@ -44,7 +44,7 @@ public static class SurrealHelpers
         Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
     }
 
-    public static void MapS3Routes<T>(WebApplication app, string url) where T : S3
+    public static void MapS3Routes<T>(WebApplication app, string url) where T : SurrealS3
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
@@ -102,8 +102,15 @@ public static class SurrealHelpers
         Console.WriteLine($"Count: {c2}");
         Console.WriteLine($"");
 
+        Console.WriteLine($"S3 API:");
+        Console.ForegroundColor = ConsoleColor.Gray;
+        var c3 = app.MapSurrealS3CRUD(url);
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Total: {c + c2}");
+        Console.WriteLine($"Count: {c2}");
+        Console.WriteLine($"");
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"Total: {c + c2 + c3}");
         Console.ForegroundColor = ConsoleColor.Gray;
     }
 

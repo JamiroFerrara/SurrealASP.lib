@@ -43,12 +43,12 @@ public static class SurrealService
         return res![0];
     }
 
-    public static async Task<T> SelectS3<T>(string id, string url) where T : S3
+    public static async Task<T> SelectS3<T>(string id, string url) where T : SurrealS3
     {
         var sql = $"SELECT * FROM {typeof(T).Name} WHERE id = '{id}'";
         var results = await ExecQuery<T>(sql, url);
         foreach (var res in results)
-            res.url = await S3.GetPresignedUrlAsync(res.key);
+            res.url = await SurrealS3.GetPresignedUrlAsync(res.key);
 
         return results![0];
     }
@@ -70,7 +70,7 @@ public static class SurrealService
         return res;
     }
 
-    public static async Task<T[]?> SelectAllS3<T>(string url) where T : S3
+    public static async Task<T[]?> SelectAllS3<T>(string url) where T : SurrealS3
     {
         Console.WriteLine($"Url: {url}");
         Console.WriteLine($"Url: {typeof(T)}");
@@ -78,7 +78,7 @@ public static class SurrealService
         Console.WriteLine($"{sql}");
         var res = await ExecQuery<T>(sql, url);
         foreach (var r in res)
-            r.url = await S3.GetPresignedUrlAsync(r.key);
+            r.url = await SurrealS3.GetPresignedUrlAsync(r.key);
 
         return res;
     }
