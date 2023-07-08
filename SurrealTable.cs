@@ -15,11 +15,17 @@ public class SurrealS3
         if (id == "")
             return "No Id!";
 
-        var client = new RestClient("https://wasabi-uploader.fly.dev");
+        var client = new RestClient("https://wasabi-uploader.fly.dev/presign");
         var request = new RestRequest();
         request.AddBody(new { key = id });
-        return (await client.PostAsync<string>(request, CancellationToken.None))!;
+        var res = await client.PostAsync<S3Response>(request, CancellationToken.None);
+        return res.url;
     }
+}
+
+public class S3Response
+{
+    public string url { get; set; }
 }
 
 public class SurrealTable<T1, T3>

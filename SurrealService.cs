@@ -77,9 +77,11 @@ public static class SurrealService
         var sql = $"SELECT * FROM {typeof(T).Name}";
         Console.WriteLine($"{sql}");
         var res = await ExecQuery<T>(sql, url);
-        foreach (var r in res)
+        Parallel.ForEach(res, async r =>
+        {
+            Console.WriteLine($"Key to presign: {r.key}");
             r.url = await SurrealS3.GetPresignedUrlAsync(r.key);
-
+        });
         return res;
     }
 
