@@ -48,7 +48,16 @@ public static class SurrealService
         var sql = $"SELECT * FROM {typeof(T).Name} WHERE id = '{id}'";
         var results = await ExecQuery<T>(sql, url);
         foreach (var res in results)
-            res.url = await SurrealS3.GetPresignedUrlAsync(res.key);
+        {
+            if (res.Expiry < DateTime.Now)
+            {
+                var presignUrl = await SurrealS3.GetPresignedUrlAsync(res.key);
+                res.Expiry = DateTime.Now.AddDays(7);
+                res.url = presignUrl;
+
+                await Update<T>(res, id, url);
+            }
+        }
 
         return results![0];
     }
