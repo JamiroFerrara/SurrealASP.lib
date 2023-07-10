@@ -89,7 +89,14 @@ public static class SurrealService
         Parallel.ForEach(res, async r =>
         {
             Console.WriteLine($"Key to presign: {r.key}");
-            r.url = await SurrealS3.GetPresignedUrlAsync(r.key);
+            if (r.Expiry < DateTime.Now)
+            {
+                var presignUrl = await SurrealS3.GetPresignedUrlAsync(r.key);
+                r.Expiry = DateTime.Now.AddDays(7);
+                r.url = presignUrl;
+
+                await Update<T>(r, r.key, url);
+            }
         });
         return res;
     }
