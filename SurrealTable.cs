@@ -7,10 +7,10 @@ public class SurrealTable
 
 public class SurrealS3
 {
-    public string key { get; set; }
+    public string id { get; set; }
     public string url { get; set; }
     public DateTime Created { get; set; } = DateTime.Now;
-    public DateTime Expiry { get; set; } = DateTime.Now;
+    public DateTime Expiry { get; set; }
 
     public static async Task<string> GetPresignedUrlAsync(string id)
     {

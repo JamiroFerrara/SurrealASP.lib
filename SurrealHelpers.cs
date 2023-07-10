@@ -49,7 +49,7 @@ public static class SurrealHelpers
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
         app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAllS3<T>(url)); ;
-        app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.SelectS3<T>(id, url)); ;
+        app.MapGet($"{typeof(T)}/Get/" + "{id}", (string id) => SurrealService.SelectS3<T>(id, url)); ;
         app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)); ;
         app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)); ;
 
@@ -72,14 +72,14 @@ public static class SurrealHelpers
         });
         app.MapPost($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}", ([FromBody] T2 item, string id) => SurrealService.Update<T2>(item, id, url));
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/GetAll", () => SurrealService.SelectAll<T2>(url)); ;
-        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Get" + "{id}", (string id) => SurrealService.Select<T2>(id, url)); ;
+        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Get/" + "{id}", (string id) => SurrealService.Select<T2>(id, url)); ;
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/DeleteAll", () => SurrealService.DeleteAll<T2>(url)); ;
         app.MapGet($"{typeof(T1)}/{typeof(T2)}/Delete" + "{id}", (string id) => SurrealService.Delete<T2>(id, url)); ;
 
         Console.WriteLine($"{typeof(T1)}" + "{item1Id}" + $"/{typeof(T2)}/" + "{item2Id}");
         Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}");
         Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/GetAll");
-        Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/Get" + "{id}");
+        Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/Get/" + "{id}");
         Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/DeleteAll");
         Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/Delete" + "{id}");
     }

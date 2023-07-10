@@ -23,7 +23,7 @@ public static class SurrealService
         return res![0];
     }
 
-    public static async Task<T?> Update<T>(T item, string id, string url)
+    public static async Task<T[]?> Update<T>(T item, string id, string url)
     {
         var sql = $"UPDATE {typeof(T).Name} CONTENT ";
         var json = JsonConvert.SerializeObject(item);
@@ -31,16 +31,17 @@ public static class SurrealService
         sql += $" WHERE id = '{id}' ";
         sql = sql.Remove(sql.Length - 1);
         sql += ";";
+        Console.WriteLine(sql);
 
         var res = await ExecQuery<T>(sql, url);
-        return res![0];
+        return res;
     }
 
-    public static async Task<T> Select<T>(string id, string url)
+    public static async Task<T[]> Select<T>(string id, string url)
     {
         var sql = $"SELECT * FROM {typeof(T).Name} WHERE id = '{id}'";
         var res = await ExecQuery<T>(sql, url);
-        return res![0];
+        return res;
     }
 
     public static async Task<T> SelectS3<T>(string id, string url) where T : SurrealS3
@@ -49,9 +50,9 @@ public static class SurrealService
         var results = await ExecQuery<T>(sql, url);
         foreach (var res in results)
         {
-            if (res.Expiry < DateTime.Now)
+            if (res.Expiry > DateTime.Now)
             {
-                var presignUrl = await SurrealS3.GetPresignedUrlAsync(res.key);
+                var presignUrl = await SurrealS3.GetPresignedUrlAsync(res.id.Split('(')[0].Split('\'')[0]);
                 res.Expiry = DateTime.Now.AddDays(7);
                 res.url = presignUrl;
 
@@ -86,11 +87,20 @@ public static class SurrealService
         var sql = $"SELECT * FROM {typeof(T).Name}";
         Console.WriteLine($"{sql}");
         var res = await ExecQuery<T>(sql, url);
-        Parallel.ForEach(res, async r =>
+        foreach (var r in res)
         {
-            Console.WriteLine($"Key to presign: {r.key}");
-            r.url = await SurrealS3.GetPresignedUrlAsync(r.key);
-        });
+            Console.WriteLine($"Key to presign: {r.id}");
+            if (r.Expiry < DateTime.Now)
+            {
+                Console.WriteLine("Expiry..");
+                //FIX: This is hardcoded BAD
+                var presignUrl = await SurrealS3.GetPresignedUrlAsync(r.id.Split('(')[0].Split('\'')[0]);
+                r.Expiry = DateTime.Now.AddDays(7);
+                r.url = presignUrl;
+
+                await Update<T>(r, r.id, url);
+            }
+        };
         return res;
     }
 
