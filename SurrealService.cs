@@ -50,10 +50,10 @@ public static class SurrealService
         var results = await ExecQuery<T>(sql, url);
         foreach (var res in results)
         {
-            if (res.Expiry > DateTime.Now)
+            if (res.expiry > DateTime.Now)
             {
                 var presignUrl = await SurrealS3.GetPresignedUrlAsync(res.id.Split('(')[0].Split('\'')[0]);
-                res.Expiry = DateTime.Now.AddDays(7);
+                res.expiry = DateTime.Now.AddDays(7);
                 res.url = presignUrl;
 
                 await Update<T>(res, id, url);
@@ -90,12 +90,12 @@ public static class SurrealService
         foreach (var r in res)
         {
             Console.WriteLine($"Key to presign: {r.id}");
-            if (r.Expiry < DateTime.Now)
+            if (r.expiry < DateTime.Now)
             {
                 Console.WriteLine("Expiry..");
-                //FIX: This is hardcoded BAD
+                //FIX: This is hardcoded
                 var presignUrl = await SurrealS3.GetPresignedUrlAsync(r.id.Split('(')[0].Split('\'')[0]);
-                r.Expiry = DateTime.Now.AddDays(7);
+                r.expiry = DateTime.Now.AddDays(7);
                 r.url = presignUrl;
 
                 await Update<T>(r, r.id, url);

@@ -9,8 +9,8 @@ public class SurrealS3
 {
     public string id { get; set; }
     public string url { get; set; }
-    public DateTime Created { get; set; } = DateTime.Now;
-    public DateTime Expiry { get; set; }
+    public DateTime created { get; set; } = DateTime.Now;
+    public DateTime expiry { get; set; }
 
     public static async Task<string> GetPresignedUrlAsync(string id)
     {
