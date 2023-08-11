@@ -29,12 +29,12 @@ public static class SurrealHelpers
 
     public static void MapRoutes<T>(WebApplication app, string url)
     {
-        app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
-        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
-        app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAll<T>(url)); ;
-        app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.Select<T>(id, url)); ;
-        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)); ;
-        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)); ;
+        app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
+        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
+        app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAll<T>(url)).WithName($"GetAll{typeof(T)}");
+        app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.Select<T>(id, url)).WithName($"Get{typeof(T)}");
+        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)).WithName($"DeleteAll{typeof(T)}");
+        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)).WithName($"Delete{typeof(T)}");
 
         Console.WriteLine($"{typeof(T)}/Create");
         Console.WriteLine($"{typeof(T)}/Update/" + "{id}");
@@ -46,12 +46,12 @@ public static class SurrealHelpers
 
     public static void MapS3Routes<T>(WebApplication app, string url) where T : SurrealS3
     {
-        app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url));
-        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url));
-        app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAllS3<T>(url)); ;
-        app.MapGet($"{typeof(T)}/Get/" + "{id}", (string id) => SurrealService.SelectS3<T>(id, url)); ;
-        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)); ;
-        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)); ;
+        app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
+        app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
+        app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAllS3<T>(url)).WithName($"GetAll{typeof(T)}");
+        app.MapGet($"{typeof(T)}/Get/" + "{id}", (string id) => SurrealService.SelectS3<T>(id, url)).WithName($"Get{typeof(T)}");
+        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)).WithName($"DeleteAll{typeof(T)}");
+        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)).WithName($"Delete{typeof(T)}");
 
         Console.WriteLine($"{typeof(T)}/Create");
         Console.WriteLine($"{typeof(T)}/Update/" + "{id}");
@@ -69,12 +69,12 @@ public static class SurrealHelpers
                 return default(T2);
 
             return await SurrealService.Relate<T2>(item1Id, item2Id, relation, items, url);
-        });
-        app.MapPost($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}", ([FromBody] T2 item, string id) => SurrealService.Update<T2>(item, id, url));
-        app.MapGet($"{typeof(T1)}/{typeof(T2)}/GetAll", () => SurrealService.SelectAll<T2>(url)); ;
-        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Get/" + "{id}", (string id) => SurrealService.Select<T2>(id, url)); ;
-        app.MapGet($"{typeof(T1)}/{typeof(T2)}/DeleteAll", () => SurrealService.DeleteAll<T2>(url)); ;
-        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Delete" + "{id}", (string id) => SurrealService.Delete<T2>(id, url)); ;
+        }).WithName($"{typeof(T1)}{typeof(T2)}{typeof(T3)}");
+        app.MapPost($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}", ([FromBody] T2 item, string id) => SurrealService.Update<T2>(item, id, url)).WithName($"Update{typeof(T1)}{typeof(T2)}{typeof(T3)}");
+        app.MapGet($"{typeof(T1)}/{typeof(T2)}/GetAll", () => SurrealService.SelectAll<T2>(url)).WithName($"GetAll{typeof(T1)}{typeof(T2)}{typeof(T3)}");
+        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Get/" + "{id}", (string id) => SurrealService.Select<T2>(id, url)).WithName($"Get{typeof(T1)}{typeof(T2)}{typeof(T3)}");
+        app.MapGet($"{typeof(T1)}/{typeof(T2)}/DeleteAll", () => SurrealService.DeleteAll<T2>(url)).WithName($"DeleteAll{typeof(T1)}{typeof(T2)}{typeof(T3)}");
+        app.MapGet($"{typeof(T1)}/{typeof(T2)}/Delete" + "{id}", (string id) => SurrealService.Delete<T2>(id, url)).WithName($"Delete{typeof(T1)}{typeof(T2)}{typeof(T3)}");
 
         Console.WriteLine($"{typeof(T1)}" + "{item1Id}" + $"/{typeof(T2)}/" + "{item2Id}");
         Console.WriteLine($"{typeof(T1)}/{typeof(T2)}/Update/" + "{id}");
