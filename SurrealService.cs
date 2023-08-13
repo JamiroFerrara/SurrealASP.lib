@@ -44,7 +44,7 @@ public static class SurrealService
         return res;
     }
 
-    public static async Task<T> SelectS3<T>(string id, string url) where T : SurrealS3
+    public static async Task<T> SelectS3<T>(string id, string url) where T : S3Table
     {
         var sql = $"SELECT * FROM {typeof(T).Name} WHERE id = '{id}'";
         var results = await ExecQuery<T>(sql, url);
@@ -52,7 +52,7 @@ public static class SurrealService
         {
             if (res.expiry > DateTime.Now)
             {
-                var presignUrl = await SurrealS3.GetPresignedUrlAsync(res.id.Split('(')[0].Split('\'')[0]);
+                var presignUrl = await S3Table.GetPresignedUrlAsync(res.id.Split('(')[0].Split('\'')[0]);
                 res.expiry = DateTime.Now.AddDays(7);
                 res.url = presignUrl;
 
@@ -80,7 +80,7 @@ public static class SurrealService
         return res;
     }
 
-    public static async Task<T[]?> SelectAllS3<T>(string url) where T : SurrealS3
+    public static async Task<T[]?> SelectAllS3<T>(string url) where T : S3Table
     {
         Console.WriteLine($"Url: {url}");
         Console.WriteLine($"Url: {typeof(T)}");
@@ -94,7 +94,7 @@ public static class SurrealService
             {
                 Console.WriteLine("Expiry..");
                 //FIX: This is hardcoded
-                var presignUrl = await SurrealS3.GetPresignedUrlAsync(r.id.Split('(')[0].Split('\'')[0]);
+                var presignUrl = await S3Table.GetPresignedUrlAsync(r.id.Split('(')[0].Split('\'')[0]);
                 r.expiry = DateTime.Now.AddDays(7);
                 r.url = presignUrl;
 

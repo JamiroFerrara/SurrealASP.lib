@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OpenApi;
+using System.Linq.Expressions;
 
 public static class SurrealHelpers
 {
@@ -56,17 +56,24 @@ public static class SurrealHelpers
             if (method.Name == "Equals") continue;
             if (method.Name == "GetHashCode") continue;
 
-            //BUG: This works but isn't picked up by swagger..
             var instance = Activator.CreateInstance(typeof(T));
             var requestDelegate = RequestDelegateFactory.Create(method, context => new T()).RequestDelegate;
-            app.MapPost($"/{typeof(T).Name}/{method.Name}", requestDelegate)
+
+            Type returnType = method.ReturnType;
+            ParameterInfo[] parameters = method.GetParameters();
+            Type[] parameterTypes = Array.ConvertAll(parameters, p => p.ParameterType);
+
+            Type delegateType = Expression.GetDelegateType(parameterTypes.Concat(new[] { returnType }).ToArray());
+            var delgate = Delegate.CreateDelegate(delegateType, new T(), method);
+
+            app.MapPost($"/{typeof(T).Name}/{method.Name}", delgate)
                 .WithName($"{method.Name}");
 
             Console.WriteLine(($"{typeof(T)}/{method.Name}"));
         }
     }
 
-    public static void MapS3Routes<T>(WebApplication app, string url) where T : SurrealS3
+    public static void MapS3Routes<T>(WebApplication app, string url) where T : S3Table
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
@@ -139,11 +146,11 @@ public static class SurrealHelpers
     public static int MapSurrealCRUD(this WebApplication app, string url)
     {
         var count = 0;
-        var baseType = typeof(SurrealTable);
+        var baseType = typeof(Table);
         var namespaceTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => baseType.IsAssignableFrom(t));
         foreach (var type in namespaceTypes)
         {
-            if (type != typeof(SurrealTable))
+            if (type != typeof(Table))
             {
                 //NOTE: All types that inherit from SurrealTable
                 var mapRoutesMethod = typeof(SurrealHelpers).GetMethod(nameof(MapRoutes), BindingFlags.Public | BindingFlags.Static);
@@ -158,11 +165,11 @@ public static class SurrealHelpers
     public static int MapSurrealS3CRUD(this WebApplication app, string url)
     {
         var count = 0;
-        var baseType = typeof(SurrealS3);
+        var baseType = typeof(S3Table);
         var namespaceTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => baseType.IsAssignableFrom(t));
         foreach (var type in namespaceTypes)
         {
-            if (type != typeof(SurrealS3))
+            if (type != typeof(S3Table))
             {
                 var mapRoutesMethod = typeof(SurrealHelpers).GetMethod(nameof(MapS3Routes), BindingFlags.Public | BindingFlags.Static);
                 var genericMapRoutesMethod = mapRoutesMethod?.MakeGenericMethod(type);
@@ -176,12 +183,12 @@ public static class SurrealHelpers
     public static int MapSurrealCRUDRelations(this WebApplication app, string url)
     {
         var count = 0;
-        var namespaceTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => typeof(SurrealTable).IsAssignableFrom(t));
+        var namespaceTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => typeof(Table).IsAssignableFrom(t));
         foreach (var type in namespaceTypes)
         {
             foreach (var type2 in namespaceTypes)
             {
-                var closedType = typeof(SurrealTable<,>).MakeGenericType(type, type2);
+                var closedType = typeof(Table<,>).MakeGenericType(type, type2);
                 var relationTypes = Assembly.GetExecutingAssembly().GetTypes().Where(t => closedType.IsAssignableFrom(t));
                 foreach (var t in relationTypes)
                 {
