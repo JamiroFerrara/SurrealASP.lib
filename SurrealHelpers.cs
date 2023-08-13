@@ -1,6 +1,8 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OpenApi;
 
 public static class SurrealHelpers
 {
@@ -27,14 +29,14 @@ public static class SurrealHelpers
         return properties.Where(p => p.DeclaringType == derivedType).ToArray();
     }
 
-    public static void MapRoutes<T>(WebApplication app, string url)
+    public static void MapRoutes<T>(WebApplication app, string url) where T : new()
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
+        app.MapPost($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)).WithName($"DeleteAll{typeof(T)}");
+        app.MapPost($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)).WithName($"Delete{typeof(T)}");
         app.MapGet($"{typeof(T)}/GetAll", () => SurrealService.SelectAll<T>(url)).WithName($"GetAll{typeof(T)}");
         app.MapGet($"{typeof(T)}/Get" + "{id}", (string id) => SurrealService.Select<T>(id, url)).WithName($"Get{typeof(T)}");
-        app.MapGet($"{typeof(T)}/DeleteAll", () => SurrealService.DeleteAll<T>(url)).WithName($"DeleteAll{typeof(T)}");
-        app.MapGet($"{typeof(T)}/Delete" + "{id}", (string id) => SurrealService.Delete<T>(id, url)).WithName($"Delete{typeof(T)}");
 
         Console.WriteLine($"{typeof(T)}/Create");
         Console.WriteLine($"{typeof(T)}/Update/" + "{id}");
@@ -42,6 +44,26 @@ public static class SurrealHelpers
         Console.WriteLine($"{typeof(T)}/Get" + "{id}");
         Console.WriteLine($"{typeof(T)}/DeleteAll");
         Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
+
+        //NOTE: Map additional routes
+        Type type = typeof(T); // Replace MyClass with the actual type you want to inspect
+        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+        foreach (MethodInfo method in methods)
+        {
+            if (method.IsSpecialName) continue;
+            if (method.Name == "GetType") continue;
+            if (method.Name == "ToString") continue;
+            if (method.Name == "Equals") continue;
+            if (method.Name == "GetHashCode") continue;
+
+            //BUG: This works but isn't picked up by swagger..
+            var instance = Activator.CreateInstance(typeof(T));
+            var requestDelegate = RequestDelegateFactory.Create(method, context => new T()).RequestDelegate;
+            app.MapPost($"/{typeof(T).Name}/{method.Name}", requestDelegate)
+                .WithName($"{method.Name}");
+
+            Console.WriteLine(($"{typeof(T)}/{method.Name}"));
+        }
     }
 
     public static void MapS3Routes<T>(WebApplication app, string url) where T : SurrealS3
@@ -123,6 +145,7 @@ public static class SurrealHelpers
         {
             if (type != typeof(SurrealTable))
             {
+                //NOTE: All types that inherit from SurrealTable
                 var mapRoutesMethod = typeof(SurrealHelpers).GetMethod(nameof(MapRoutes), BindingFlags.Public | BindingFlags.Static);
                 var genericMapRoutesMethod = mapRoutesMethod?.MakeGenericMethod(type);
                 genericMapRoutesMethod?.Invoke(null, new object[] { app, url });
