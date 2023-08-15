@@ -10,12 +10,32 @@ public class Table
         var expression = action.Simplify<T>().Body.ToString();
         expression = expression.Parse<T>();
         var sql = $"SELECT * FROM {typeof(T).Name} WHERE {expression}";
-        //
+
         //FIX: The url must be fed in from appsettings.. otherwise it's not flexible
         //TODO: Replace url constructor with appsettings value.
         var res = await SurrealService.ExecQuery<T>(sql, "http://localhost:8000/sql");
         return res;
     }
+
+    public static async Task<int> Count<T>(Expression<Func<T, bool>> action)
+    {
+        var expression = action.Simplify<T>().Body.ToString();
+        expression = expression.Parse<T>();
+        var sql = $"SELECT count() FROM {typeof(T).Name} WHERE {expression}";
+
+        //FIX: The url must be fed in from appsettings.. otherwise it's not flexible
+        //TODO: Replace url constructor with appsettings value.
+        var res = await SurrealService.ExecQuery<Count>(sql, "http://localhost:8000/sql");
+        if (res.Count() != 0)
+            return res[0].count;
+        else
+            return 0;
+    }
+}
+
+public class Count
+{
+    public int count { get; set; }
 }
 
 public class S3Table
