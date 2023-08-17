@@ -9,10 +9,13 @@ public static class SurrealService
     public static string Database { get; set; } = "main";
     public static string Namespace { get; set; } = "main";
 
-    public static async Task<T> Create<T>(T item, string url)
+    public static async Task<T> Create<T>(T item, string url) where T : TableBase
     {
         var type = item?.GetType();
         var props = type?.GetProperties();
+
+        if (item.Id == null)
+            item.Id = Guid.NewGuid().ToString();
 
         var sql = $"CREATE {type?.Name} CONTENT ";
         var json = JsonConvert.SerializeObject(item);
@@ -23,8 +26,9 @@ public static class SurrealService
         return res![0];
     }
 
-    public static async Task<T[]?> Update<T>(T item, string id, string url)
+    public static async Task<T[]?> Update<T>(T item, string id, string url) where T : TableBase
     {
+        item.Id = id;
         var sql = $"UPDATE {typeof(T).Name} CONTENT ";
         var json = JsonConvert.SerializeObject(item);
         sql = sql + json;
@@ -52,7 +56,7 @@ public static class SurrealService
         {
             if (res.expiry > DateTime.Now)
             {
-                var presignUrl = await S3Table.GetPresignedUrlAsync(res.id.Split('(')[0].Split('\'')[0]);
+                var presignUrl = await S3Table.GetPresignedUrlAsync(res.Id.Split('(')[0].Split('\'')[0]);
                 res.expiry = DateTime.Now.AddDays(7);
                 res.url = presignUrl;
 
@@ -89,16 +93,16 @@ public static class SurrealService
         var res = await ExecQuery<T>(sql, url);
         foreach (var r in res)
         {
-            Console.WriteLine($"Key to presign: {r.id}");
+            Console.WriteLine($"Key to presign: {r.Id}");
             if (r.expiry < DateTime.Now)
             {
                 Console.WriteLine("Expiry..");
                 //FIX: This is hardcoded
-                var presignUrl = await S3Table.GetPresignedUrlAsync(r.id.Split('(')[0].Split('\'')[0]);
+                var presignUrl = await S3Table.GetPresignedUrlAsync(r.Id.Split('(')[0].Split('\'')[0]);
                 r.expiry = DateTime.Now.AddDays(7);
                 r.url = presignUrl;
 
-                await Update<T>(r, r.id, url);
+                await Update<T>(r, r.Id, url);
             }
         };
         return res;
@@ -111,7 +115,7 @@ public static class SurrealService
         return res?.Content;
     }
 
-    public static async Task<T> Delete<T>(string id, string url)
+    public static async Task<T> Delete<T>(string id, string url) where T : TableBase
     {
         var sql = $"REMOVE FROM {typeof(T).Name}:{id}";
         var res = await ExecQuery<T>(sql, url);

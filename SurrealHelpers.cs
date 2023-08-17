@@ -29,7 +29,7 @@ public static class SurrealHelpers
         return properties.Where(p => p.DeclaringType == derivedType).ToArray();
     }
 
-    public static void MapRoutes<T>(WebApplication app, string url) where T : new()
+    public static void MapRoutes<T>(WebApplication app, string url) where T : TableBase, new()
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
@@ -73,7 +73,7 @@ public static class SurrealHelpers
         }
     }
 
-    public static void MapS3Routes<T>(WebApplication app, string url) where T : S3Table
+    public static void MapS3Routes<T>(WebApplication app, string url) where T : S3Table, new()
     {
         app.MapPost($"{typeof(T)}/Create", ([FromBody] T item) => SurrealService.Create<T>(item, url)).WithName($"Create{typeof(T)}");
         app.MapPost($"{typeof(T)}/Update/" + "{id}", ([FromBody] T item, string id) => SurrealService.Update<T>(item, id, url)).WithName($"Update{typeof(T)}");
@@ -88,9 +88,36 @@ public static class SurrealHelpers
         Console.WriteLine($"{typeof(T)}/Get" + "{id}");
         Console.WriteLine($"{typeof(T)}/DeleteAll");
         Console.WriteLine($"{typeof(T)}/Delete" + "{id}");
+
+        //NOTE: Map additional routes
+        Type type = typeof(T); // Replace MyClass with the actual type you want to inspect
+        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+        foreach (MethodInfo method in methods)
+        {
+            if (method.IsSpecialName) continue;
+            if (method.Name == "GetType") continue;
+            if (method.Name == "ToString") continue;
+            if (method.Name == "Equals") continue;
+            if (method.Name == "GetHashCode") continue;
+
+            var instance = Activator.CreateInstance(typeof(T));
+            var requestDelegate = RequestDelegateFactory.Create(method, context => new T()).RequestDelegate;
+
+            Type returnType = method.ReturnType;
+            ParameterInfo[] parameters = method.GetParameters();
+            Type[] parameterTypes = Array.ConvertAll(parameters, p => p.ParameterType);
+
+            Type delegateType = Expression.GetDelegateType(parameterTypes.Concat(new[] { returnType }).ToArray());
+            var delgate = Delegate.CreateDelegate(delegateType, new T(), method);
+
+            app.MapPost($"/{typeof(T).Name}/{method.Name}", delgate)
+                .WithName($"{method.Name}");
+
+            Console.WriteLine(($"{typeof(T)}/{method.Name}"));
+        }
     }
 
-    public static void MapRelations<T1, T2, T3>(WebApplication app, string url)
+    public static void MapRelations<T1, T2, T3>(WebApplication app, string url) where T2 : TableBase
     {
         app.MapPost("{item1Id}" + $"/{typeof(T2)}/" + "{item2Id}", async (string item1Id, string item2Id, string relation, [FromBody] Dictionary<string, string> items) =>
         {

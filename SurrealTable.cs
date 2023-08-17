@@ -1,7 +1,9 @@
 using System.Linq.Expressions;
 using RestSharp;
 
-public class Table
+public class Table : TableBase { }
+
+public class TableBase
 {
     public string? Id { get; set; }
 
@@ -32,9 +34,10 @@ public class Table
             return 0;
     }
 
-    public static async Task<T> Create<T>(T item) => await SurrealService.Create<T>(item, "http://localhost:8000/sql");
-    public static async Task<T[]?> Update<T>(T item, string id) => await SurrealService.Update<T>(item, id, "http://localhost:8000/sql");
-    public static async Task<T> Delete<T>(T item, string id) => await SurrealService.Delete<T>(id, "http://localhost:8000/sql");
+
+    public static async Task<T> Create<T>(T item) where T : TableBase => await SurrealService.Create<T>(item, "http://localhost:8000/sql");
+    public static async Task<T[]?> Update<T>(T item, string id) where T : TableBase => await SurrealService.Update<T>(item, id, "http://localhost:8000/sql");
+    public static async Task<T> Delete<T>(string id) where T : TableBase => await SurrealService.Delete<T>(id, "http://localhost:8000/sql");
 }
 
 public class Count
@@ -42,9 +45,8 @@ public class Count
     public int count { get; set; }
 }
 
-public class S3Table
+public class S3Table : TableBase
 {
-    public string id { get; set; }
     public string url { get; set; }
     public DateTime created { get; set; } = DateTime.Now;
     public DateTime expiry { get; set; }
@@ -68,11 +70,9 @@ public class S3Response
     public string url { get; set; }
 }
 
-public class Table<T1, T3>
+public class Table<T1, T3> : TableBase
 {
-    public string? Id { get; set; }
     public string? In { get; set; }
     public string? Out { get; set; }
     public DateTime Created { get; set; }
 }
-
