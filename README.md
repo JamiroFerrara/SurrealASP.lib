@@ -50,11 +50,11 @@ app.MapSurreal("http://localhost:8000/sql");
 
 Once done you are all set to start building entities.
 
-**All you need to do** is create a class that extends the **SurrealTable**
+**All you need to do** is create a class that extends the **Table**
 class like so:
 
 ```csharp	
-public class User : SurrealTable
+public class User : Table
 {
     public string Name { get; set; }
     public int Age { get; set; }
@@ -75,7 +75,7 @@ You can even define relations in this manner:
 We generate another table: 
 
 ```csharp	
-public class ShopItem : SurrealTable
+public class ShopItem : Table
 {
     public string Name { get; set; }
     public int Price { get; set; }
@@ -85,7 +85,7 @@ public class ShopItem : SurrealTable
 And then define a intermediate table with extra information about the relationship:
 
 ```csharp	
-public class WantsToBuy : SurrealTable<User, ShopItem>
+public class WantsToBuy : Table<User, ShopItem>
 {
     public int Amount { get; set; }
 }
@@ -97,5 +97,21 @@ GET ->  http://localhost:8000/User/WantsToBuy/GetAll
 GET ->  http://localhost:8000/User/WantsToBuy/DeleteAll
 GET ->  http://localhost:8000/User/WantsToBuy/Get/{id}
 GET ->  http://localhost:8000/User/WantsToBuy/Delete/{id}
+
+## Custom endpoints
+Custom endpoints can also be defined using simple functions within any class that implements the "TableBase" class.
+
+LINQ style expressions can also be done within the method like so:
+
+```csharp	
+public class ShopItem : Table
+{
+    public string Name { get; set; }
+    public int Price { get; set; }
+    
+    public Task<int> getPrice(string id) => (await this.Where(x = x.Id == id)).Price;
+}
+```
+POST -> http://localhost:8000/getPrice
 
 👌 Happy coding!
