@@ -31,6 +31,10 @@ public class Table
         else
             return 0;
     }
+
+    public static async Task<T> Create<T>(T item) => await SurrealService.Create<T>(item, "http://localhost:8000/sql");
+    public static async Task<T[]?> Update<T>(T item, string id) => await SurrealService.Update<T>(item, id, "http://localhost:8000/sql");
+    public static async Task<T> Delete<T>(T item, string id) => await SurrealService.Delete<T>(id, "http://localhost:8000/sql");
 }
 
 public class Count
